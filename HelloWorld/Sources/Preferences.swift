@@ -19,6 +19,7 @@ internal struct Preferences {
         case animationToValue
         case useCustomGif
         case animationIsStatic
+        case gifMinWidth
     }
     static subscript<T>(_ key: Keys) -> T {
         get {
@@ -36,6 +37,8 @@ internal struct Preferences {
                     return false as! T
                 case .animationIsStatic:
                     return false as! T
+                case .gifMinWidth:
+                    return 0.0 as! T
                 }
             }
             return value
@@ -51,5 +54,6 @@ internal struct Preferences {
         Preferences[.animationToValue] = 830.0
         Preferences[.useCustomGif] = false
         Preferences[.animationIsStatic] = false
+        Preferences[.gifMinWidth] = 0.0
     }
 }

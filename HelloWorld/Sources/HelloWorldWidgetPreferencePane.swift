@@ -22,13 +22,14 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
     private let goBackCheckbox = NSButton(checkboxWithTitle: "Autoreverse (Walk back and forth)", target: nil, action: nil)
     private let fromValueField = NSTextField()
     private let toValueField = NSTextField()
+    private let minWidthField = NSTextField()
     
     // Elements to enable/disable based on Static Mode
     private var movementRows: [NSView] = []
     
     override func loadView() {
         // Larger frame height to hold additional fields
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 350))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 380))
         self.view = container
         
         let stackView = NSStackView()
@@ -45,6 +46,25 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
             stackView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
             stackView.bottomAnchor.constraint(equalTo: container.bottomAnchor)
         ])
+        
+        // Helper to construct a uniform preference row
+        func createRow(labelTitle: String, textField: NSTextField) -> NSView {
+            let rowStack = NSStackView()
+            rowStack.orientation = .horizontal
+            rowStack.spacing = 10
+            rowStack.alignment = .centerY
+            
+            let label = NSTextField(labelWithString: labelTitle)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.widthAnchor.constraint(equalToConstant: 130).isActive = true
+            
+            textField.translatesAutoresizingMaskIntoConstraints = false
+            textField.widthAnchor.constraint(equalToConstant: 90).isActive = true
+            
+            rowStack.addArrangedSubview(label)
+            rowStack.addArrangedSubview(textField)
+            return rowStack
+        }
         
         // --- SECTION 1: GIF SOURCE ---
         let sourceHeader = NSTextField(labelWithString: "GIF Image Source")
@@ -66,6 +86,10 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
         gifSourceLabel.font = NSFont.systemFont(ofSize: 11)
         stackView.addArrangedSubview(gifSourceLabel)
         
+        let minWidthRow = createRow(labelTitle: "Min Width (points):", textField: minWidthField)
+        stackView.addArrangedSubview(minWidthRow)
+        minWidthField.delegate = self
+        
         // Divider
         let divider1 = NSBox()
         divider1.boxType = .separator
@@ -86,25 +110,6 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
         staticCheckbox.target = self
         staticCheckbox.action = #selector(staticModeChanged(_:))
         stackView.addArrangedSubview(staticCheckbox)
-        
-        // Helper to construct a uniform preference row
-        func createRow(labelTitle: String, textField: NSTextField) -> NSView {
-            let rowStack = NSStackView()
-            rowStack.orientation = .horizontal
-            rowStack.spacing = 10
-            rowStack.alignment = .centerY
-            
-            let label = NSTextField(labelWithString: labelTitle)
-            label.translatesAutoresizingMaskIntoConstraints = false
-            label.widthAnchor.constraint(equalToConstant: 130).isActive = true
-            
-            textField.translatesAutoresizingMaskIntoConstraints = false
-            textField.widthAnchor.constraint(equalToConstant: 90).isActive = true
-            
-            rowStack.addArrangedSubview(label)
-            rowStack.addArrangedSubview(textField)
-            return rowStack
-        }
         
         // Create rows and save to movementRows array
         let durRow = createRow(labelTitle: "Duration (seconds):", textField: durationField)
@@ -154,6 +159,7 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
         goBackCheckbox.state = (Preferences[.animationGoBack] as Bool) ? .on : .off
         fromValueField.stringValue = String(format: "%.1f", Preferences[.animationFromValue] as Double)
         toValueField.stringValue = String(format: "%.1f", Preferences[.animationToValue] as Double)
+        minWidthField.stringValue = String(format: "%.0f", Preferences[.gifMinWidth] as Double)
         
         let isStatic: Bool = Preferences[.animationIsStatic]
         staticCheckbox.state = isStatic ? .on : .off
@@ -268,6 +274,8 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
                 Preferences[.animationFromValue] = doubleVal
             } else if textField == toValueField {
                 Preferences[.animationToValue] = doubleVal
+            } else if textField == minWidthField {
+                Preferences[.gifMinWidth] = max(0.0, doubleVal)
             }
             notifyWidget()
         }

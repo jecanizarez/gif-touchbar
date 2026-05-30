@@ -75,18 +75,29 @@ class NyanWidgetView: NSView {
     private func updateImageViewLayout() {
         guard let image = imageView.image else { return }
         let isStatic: Bool = Preferences[.animationIsStatic]
+        let minWidthPref: Double = Preferences[.gifMinWidth]
+        
+        let imageSize = image.size
+        var scaledWidth = imageSize.height > 0 ? (30.0 / imageSize.height) * imageSize.width : 680
+        
+        if minWidthPref > 0 {
+            scaledWidth = max(scaledWidth, CGFloat(minWidthPref))
+        }
         
         if isStatic {
-            // Static mode: Fill container and scale appropriately
-            imageView.frame = self.bounds
-            imageView.imageScaling = .scaleProportionallyUpOrDown
+            // Center the image view in the bounds
+            let xOffset = (self.bounds.width - scaledWidth) / 2
+            imageView.frame = CGRect(x: xOffset, y: 0, width: scaledWidth, height: 30)
         } else {
-            // Scrolling mode: Calculate proportional width based on standard height (30)
-            let imageSize = image.size
-            let scaledWidth = imageSize.height > 0 ? (30.0 / imageSize.height) * imageSize.width : 680
-            
-            // Set starting frame positioned off-screen to the left
+            // Scrolling mode: Set starting frame positioned off-screen to the left
             imageView.frame = CGRect(x: -scaledWidth, y: 0, width: scaledWidth, height: 30)
+        }
+        
+        // Use scaleAxesIndependently if minimum width is applied and stretches the image, to fill the frame
+        let naturalWidth = imageSize.height > 0 ? (30.0 / imageSize.height) * imageSize.width : 680
+        if minWidthPref > 0 && naturalWidth < CGFloat(minWidthPref) {
+            imageView.imageScaling = .scaleAxesIndependently
+        } else {
             imageView.imageScaling = .scaleProportionallyDown
         }
     }
