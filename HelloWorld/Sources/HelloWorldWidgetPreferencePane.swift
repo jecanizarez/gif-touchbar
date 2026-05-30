@@ -17,7 +17,7 @@ class HelloWorldWidgetPreferencePane: NSViewController, NSTextFieldDelegate, PKW
     private let fromValueField = NSTextField()
     private let toValueField = NSTextField()
     
-    override func loadView() {
+    override func loadView() {  
         // Design a clean, padded configuration container
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 340, height: 230))
         self.view = container
