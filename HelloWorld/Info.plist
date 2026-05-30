@@ -8,5 +8,7 @@
 	<string>HelloWorld.HelloWorldWidget</string>
 	<key>PKWidgetAuthor</key>
 	<string>Gabriela Tovar</string>
+	<key>PKWidgetPreferenceClass</key>
+	<string>HelloWorld.HelloWorldWidgetPreferencePane</string>
 </dict>
 </plist>

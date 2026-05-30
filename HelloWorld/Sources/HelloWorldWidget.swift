@@ -9,6 +9,7 @@ import Foundation
 import AppKit
 import PockKit
 
+// MARK: - Custom NyanWidgetView
 class NyanWidgetView: NSView {
     
     private let imageView = NSImageView()
@@ -77,13 +78,18 @@ class NyanWidgetView: NSView {
     func startMovingAnimation() {
         stopMovingAnimation() // Prevent duplicate animations
         
-        let currentWidth = self.bounds.width > 0 ? self.bounds.width : 150
+        // Read latest customized settings
+        let duration: Double = Preferences[.animationDuration]
+        let goBack: Bool = Preferences[.animationGoBack]
+        let fromValue: Double = Preferences[.animationFromValue]
+        let toValue: Double = Preferences[.animationToValue]
         
         let animation = CABasicAnimation(keyPath: "transform.translation.x")
-        animation.fromValue = 0
-        animation.toValue = 680 + currentWidth
-        animation.duration = 10
+        animation.fromValue = fromValue
+        animation.toValue = toValue
+        animation.duration = duration
         animation.repeatCount = .infinity
+        animation.autoreverses = goBack
         animation.timingFunction = CAMediaTimingFunction(name: .linear)
         
         imageView.layer?.add(animation, forKey: "nyanMovement")
@@ -96,6 +102,7 @@ class NyanWidgetView: NSView {
     }
 }
 
+// MARK: - HelloWorldWidget conforming to PKWidget
 class HelloWorldWidget: PKWidget {
     
     static var identifier: String = "com.HelloWorld.HelloWorld"
@@ -110,14 +117,20 @@ class HelloWorldWidget: PKWidget {
         self.view = NyanWidgetView()
     }
     
-    // Start animation when widget is visible
+    // Start animation and register live updates observer when widget is visible
     func viewDidAppear() {
         nyanView.startMovingAnimation()
+        NotificationCenter.default.addObserver(self, selector: #selector(reloadWidgetAnimation), name: .shouldReloadNyanWidget, object: nil)
     }
     
-    // Stop animation when widget is hidden to conserve battery
+    // Stop animation and remove observer when widget is hidden
     func viewWillDisappear() {
         nyanView.stopMovingAnimation()
+        NotificationCenter.default.removeObserver(self, name: .shouldReloadNyanWidget, object: nil)
+    }
+    
+    @objc private func reloadWidgetAnimation() {
+        nyanView.startMovingAnimation()
     }
     
     // Customization preview image (required for draggability in the customization palette)
